@@ -41,13 +41,13 @@ const Index = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleLogin}>
+            <DropdownMenuItem onSelect={handleLogin}>
               Login
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onSelect={handleLogout}>
               Logout
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/admin")}>
+            <DropdownMenuItem onSelect={() => navigate("/admin")}>
               Admin Settings
             </DropdownMenuItem>
           </DropdownMenuContent>
