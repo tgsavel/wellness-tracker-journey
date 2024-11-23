@@ -29,41 +29,55 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          // Fetch categories
-          const { data: categoriesData, error: categoriesError } = await supabase
-            .from('categories')
-            .select('*')
-            .eq('user_id', session.user.id);
-          
-          if (categoriesError) throw categoriesError;
-          setCategories(categoriesData || []);
-
-          // Fetch event types
-          const { data: eventTypesData, error: eventTypesError } = await supabase
-            .from('event_types')
-            .select('*')
-            .eq('user_id', session.user.id);
-          
-          if (eventTypesError) throw eventTypesError;
-          setEventTypes(eventTypesData || []);
-
-          // Fetch events
-          const { data: eventsData, error: eventsError } = await supabase
-            .from('events')
-            .select('*')
-            .eq('user_id', session.user.id);
-          
-          if (eventsError) throw eventsError;
-          setEvents(eventsData || []);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.error("No authenticated user found");
+          return;
         }
+
+        // Fetch categories for the authenticated user
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (categoriesError) throw categoriesError;
+        setCategories(categoriesData || []);
+
+        // Fetch event types for the authenticated user
+        const { data: eventTypesData, error: eventTypesError } = await supabase
+          .from('event_types')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (eventTypesError) throw eventTypesError;
+        setEventTypes(eventTypesData || []);
+
+        // Fetch events for the authenticated user
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (eventsError) throw eventsError;
+        setEvents(eventsData || []);
       } catch (error: any) {
         toast.error("Error fetching data: " + error.message);
       }
     };
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        fetchData();
+      } else if (event === 'SIGNED_OUT') {
+        setEvents([]);
+        setEventTypes([]);
+        setCategories([]);
+      }
+    });
+
+    // Initial fetch
     fetchData();
 
     // Subscribe to realtime changes
@@ -72,7 +86,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'events' 
+        table: 'events',
+        filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
       }, payload => {
         if (payload.eventType === 'INSERT') {
           setEvents(current => [...current, payload.new as Event]);
@@ -86,7 +101,9 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
       })
       .subscribe();
 
+    // Cleanup
     return () => {
+      subscription.unsubscribe();
       eventsSubscription.unsubscribe();
     };
   }, []);
