@@ -51,8 +51,11 @@ const DailyTracker = () => {
                 <SelectValue placeholder="Select event category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bathroom">Bathroom</SelectItem>
-                <SelectItem value="symptom">Symptom</SelectItem>
+                {[...new Set(eventTypes.map(type => type.categoryId))].map(categoryId => (
+                  <SelectItem key={categoryId} value={categoryId}>
+                    {categoryId}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -63,7 +66,7 @@ const DailyTracker = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {eventTypes
-                    .filter((type) => type.category === selectedCategory)
+                    .filter((type) => type.categoryId === selectedCategory)
                     .map((type) => (
                       <SelectItem key={type.id} value={type.name}>
                         {type.name}
@@ -98,21 +101,21 @@ const DailyTracker = () => {
           {events
             .filter(event => event.date === new Date().toISOString().split("T")[0])
             .map((event) => (
-            <div
-              key={event.id}
-              className="p-3 bg-accent rounded-md flex justify-between items-center"
-            >
-              <div>
-                <p className="font-medium">{event.type}</p>
-                {event.notes && (
-                  <p className="text-sm text-gray-600">{event.notes}</p>
-                )}
+              <div
+                key={event.id}
+                className="p-3 bg-accent rounded-md flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">{event.type}</p>
+                  {event.notes && (
+                    <p className="text-sm text-gray-600">{event.notes}</p>
+                  )}
+                </div>
+                <span className="text-sm text-gray-500">
+                  {new Date(event.timestamp).toLocaleTimeString()}
+                </span>
               </div>
-              <span className="text-sm text-gray-500">
-                {new Date(event.timestamp).toLocaleTimeString()}
-              </span>
-            </div>
-          ))}
+            ))}
         </div>
       </CardContent>
     </Card>
