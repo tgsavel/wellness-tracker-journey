@@ -27,19 +27,23 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
 
   useEffect(() => {
+    let eventsSubscription: any;
+
     const fetchData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.error("No authenticated user found");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          console.log("No active session found");
           return;
         }
+
+        const userId = session.user.id;
 
         // Fetch categories for the authenticated user
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('categories')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         
         if (categoriesError) throw categoriesError;
         setCategories(categoriesData || []);
@@ -48,7 +52,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         const { data: eventTypesData, error: eventTypesError } = await supabase
           .from('event_types')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         
         if (eventTypesError) throw eventTypesError;
         setEventTypes(eventTypesData || []);
@@ -57,10 +61,32 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         const { data: eventsData, error: eventsError } = await supabase
           .from('events')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         
         if (eventsError) throw eventsError;
         setEvents(eventsData || []);
+
+        // Set up realtime subscription only after successful data fetch
+        eventsSubscription = supabase
+          .channel('events-channel')
+          .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'events',
+            filter: `user_id=eq.${userId}`
+          }, payload => {
+            if (payload.eventType === 'INSERT') {
+              setEvents(current => [...current, payload.new as Event]);
+            } else if (payload.eventType === 'DELETE') {
+              setEvents(current => current.filter(event => event.id !== payload.old.id));
+            } else if (payload.eventType === 'UPDATE') {
+              setEvents(current => current.map(event => 
+                event.id === payload.new.id ? payload.new as Event : event
+              ));
+            }
+          })
+          .subscribe();
+
       } catch (error: any) {
         toast.error("Error fetching data: " + error.message);
       }
@@ -74,37 +100,21 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
         setEvents([]);
         setEventTypes([]);
         setCategories([]);
+        if (eventsSubscription) {
+          eventsSubscription.unsubscribe();
+        }
       }
     });
 
     // Initial fetch
     fetchData();
 
-    // Subscribe to realtime changes
-    const eventsSubscription = supabase
-      .channel('events-channel')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'events',
-        filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
-      }, payload => {
-        if (payload.eventType === 'INSERT') {
-          setEvents(current => [...current, payload.new as Event]);
-        } else if (payload.eventType === 'DELETE') {
-          setEvents(current => current.filter(event => event.id !== payload.old.id));
-        } else if (payload.eventType === 'UPDATE') {
-          setEvents(current => current.map(event => 
-            event.id === payload.new.id ? payload.new as Event : event
-          ));
-        }
-      })
-      .subscribe();
-
     // Cleanup
     return () => {
       subscription.unsubscribe();
-      eventsSubscription.unsubscribe();
+      if (eventsSubscription) {
+        eventsSubscription.unsubscribe();
+      }
     };
   }, []);
 
