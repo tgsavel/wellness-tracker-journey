@@ -28,3 +28,7 @@ export interface WeeklySummary {
   totalEvents: number;
   eventsByType: Record<string, number>;
 }
+
+// Aliases for simpler naming in components
+export type Event = HealthEvent;
+export type Category = EventCategory;
