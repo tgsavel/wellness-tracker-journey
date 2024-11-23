@@ -6,7 +6,7 @@ import { EventContext } from "@/context/EventContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WeeklySummary = () => {
-  const { events } = useContext(EventContext);
+  const { events, eventTypes, categories } = useContext(EventContext);
   const [weekOffset, setWeekOffset] = useState(0);
 
   // Calculate dates for the selected week
