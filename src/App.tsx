@@ -7,6 +7,7 @@ import { Routes, Route } from "react-router-dom";
 import { EventProvider } from "./context/EventContext";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
+import DayView from "./components/DayView";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/day/:date" element={<DayView />} />
           </Routes>
           <Toaster />
           <Sonner />

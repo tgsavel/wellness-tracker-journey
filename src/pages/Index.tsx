@@ -1,5 +1,6 @@
 import DailyTracker from "@/components/DailyTracker";
 import WeeklySummary from "@/components/WeeklySummary";
+import MonthlyCalendar from "@/components/MonthlyCalendar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,7 @@ const Index = () => {
       </div>
       <DailyTracker />
       <WeeklySummary />
+      <MonthlyCalendar />
     </div>
   );
 };
