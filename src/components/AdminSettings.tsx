@@ -6,12 +6,16 @@ import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
 import { EventType, EventCategory } from "@/types/health";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Save } from "lucide-react";
 
 const AdminSettings = () => {
   const { eventTypes, setEventTypes, categories, setCategories } = useContext(EventContext);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newEventName, setNewEventName] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  const handleSave = () => {
+    toast.success("All changes have been saved successfully!");
+  };
 
   const addCategory = () => {
     if (!newCategoryName.trim()) {
@@ -60,9 +64,13 @@ const AdminSettings = () => {
   return (
     <Card className="w-full max-w-2xl mx-auto mt-8 animate-fade-in">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">
-          Admin Settings
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-2xl font-bold">Admin Settings</CardTitle>
+          <Button onClick={handleSave} className="gap-2">
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
