@@ -3,7 +3,7 @@ import { useCallback, useState, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-const MIN_DELAY_MS = 5000; // 5 seconds to be safe with Supabase's rate limit
+const MIN_DELAY_MS = 30000; // 30 seconds to be extra safe with Supabase's rate limit
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
