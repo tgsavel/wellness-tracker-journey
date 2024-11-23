@@ -32,7 +32,7 @@ const Index = () => {
             <Mountain className="w-8 h-8 text-blue-500 absolute left-4" />
             <Stethoscope className="w-8 h-8 text-green-500 ml-6" />
           </div>
-          <h1 className="text-4xl font-bold text-primary ml-4">Health Event Tracker</h1>
+          <h1 className="text-2xl font-bold text-primary ml-4">Health Event Tracker</h1>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
