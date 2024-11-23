@@ -8,7 +8,7 @@ import { EventContext } from "@/context/EventContext";
 import { format } from "date-fns";
 
 const categoryColors: { [key: string]: string } = {
-  "Bathroom": "bg-blue-100",
+  "Bathroom": "bg-green-700",
   "Exercise": "bg-green-100",
   "Medication": "bg-purple-100",
   "Food": "bg-yellow-100",
