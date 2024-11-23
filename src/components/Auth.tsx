@@ -1,67 +1,39 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-const MIN_DELAY_MS = 30000; // 30 seconds to be extra safe with Supabase's rate limit
-
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const lastAttemptTime = useRef<number>(0);
   const navigate = useNavigate();
 
-  const handleSignInWithEmail = useCallback(async (email: string) => {
+  const handleSignInWithEmail = useCallback(async (username: string) => {
     if (isLoading) return;
     
-    const now = Date.now();
-    const timeSinceLastAttempt = now - lastAttemptTime.current;
-    
-    if (timeSinceLastAttempt < MIN_DELAY_MS) {
-      const waitTime = Math.ceil((MIN_DELAY_MS - timeSinceLastAttempt) / 1000);
-      toast.error(`Please wait ${waitTime} seconds before trying again`);
-      return;
-    }
-    
     setIsLoading(true);
-    lastAttemptTime.current = now;
     
     try {
-      const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const password = "shared-testing-password-123"; // Simple shared password for testing
       
-      // First try to sign in
+      // Try to sign in first
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: `${email}@example.com`,
+        email: `${username}@example.com`,
         password,
       });
 
-      // If sign in fails, try to sign up
-      if (signInError && !signInError.message.includes('Invalid login credentials')) {
-        if (signInError.message.includes('rate_limit') || signInError.message.includes('429')) {
-          toast.error("Too many attempts. Please wait a few minutes before trying again.");
-          return;
-        }
-        throw signInError;
-      }
-
-      // If sign in failed due to invalid credentials, try to sign up
-      if (signInError?.message.includes('Invalid login credentials')) {
+      // If sign in fails, create a new account
+      if (signInError) {
         const { error: signUpError } = await supabase.auth.signUp({
-          email: `${email}@example.com`,
+          email: `${username}@example.com`,
           password,
           options: {
             data: {
-              username: email,
+              username,
             },
           },
         });
 
-        if (signUpError) {
-          if (signUpError.message.includes('rate_limit') || signUpError.message.includes('429')) {
-            toast.error("Too many attempts. Please wait a few minutes before trying again.");
-            return;
-          }
-          throw signUpError;
-        }
+        if (signUpError) throw signUpError;
       }
       
       toast.success("Successfully logged in!");
@@ -80,8 +52,8 @@ const Auth = () => {
         onSubmit={async (e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
-          const email = formData.get("email") as string;
-          await handleSignInWithEmail(email);
+          const username = formData.get("email") as string;
+          await handleSignInWithEmail(username);
         }}
         className="space-y-4"
       >
