@@ -15,6 +15,7 @@ const categoryColors: { [key: string]: string } = {
   "Sleep": "bg-indigo-100",
   "Mood": "bg-pink-100",
   "Pain": "bg-red-100",
+  "Symptom": "bg-orange-100",
   "Other": "bg-gray-100"
 };
 
@@ -138,7 +139,7 @@ const DailyTracker = () => {
         <div className="space-y-2">
           <h3 className="font-semibold flex items-center gap-2">
             Today's Events
-            <span className="text-muted-foreground font-normal">
+            <span className="text-muted-foreground font-semibold text-lg">
               {formattedDate}
             </span>
           </h3>
