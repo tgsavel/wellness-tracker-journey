@@ -28,36 +28,39 @@ const Auth = () => {
     try {
       const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
       
-      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
+      // First try to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: `${email}@example.com`,
         password,
-        options: {
-          data: {
-            username: email,
-          },
-        },
       });
 
-      if (signUpError) {
-        if (signUpError.message.includes('rate_limit') || signUpError.message.includes('429')) {
+      // If sign in fails, try to sign up
+      if (signInError && !signInError.message.includes('Invalid login credentials')) {
+        if (signInError.message.includes('rate_limit') || signInError.message.includes('429')) {
           toast.error("Too many attempts. Please wait a few minutes before trying again.");
           return;
         }
-        throw signUpError;
+        throw signInError;
       }
 
-      if (!signUpData.user) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+      // If sign in failed due to invalid credentials, try to sign up
+      if (signInError?.message.includes('Invalid login credentials')) {
+        const { error: signUpError } = await supabase.auth.signUp({
           email: `${email}@example.com`,
           password,
+          options: {
+            data: {
+              username: email,
+            },
+          },
         });
 
-        if (signInError) {
-          if (signInError.message.includes('rate_limit') || signInError.message.includes('429')) {
+        if (signUpError) {
+          if (signUpError.message.includes('rate_limit') || signUpError.message.includes('429')) {
             toast.error("Too many attempts. Please wait a few minutes before trying again.");
             return;
           }
-          throw signInError;
+          throw signUpError;
         }
       }
       
