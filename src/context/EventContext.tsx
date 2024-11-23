@@ -29,14 +29,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (user) {
+        if (session?.user) {
           // Fetch categories
           const { data: categoriesData, error: categoriesError } = await supabase
             .from('categories')
             .select('*')
-            .eq('user_id', user.id);
+            .eq('user_id', session.user.id);
           
           if (categoriesError) throw categoriesError;
           setCategories(categoriesData || []);
@@ -45,7 +45,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           const { data: eventTypesData, error: eventTypesError } = await supabase
             .from('event_types')
             .select('*')
-            .eq('user_id', user.id);
+            .eq('user_id', session.user.id);
           
           if (eventTypesError) throw eventTypesError;
           setEventTypes(eventTypesData || []);
@@ -54,17 +54,13 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
           const { data: eventsData, error: eventsError } = await supabase
             .from('events')
             .select('*')
-            .eq('user_id', user.id);
+            .eq('user_id', session.user.id);
           
           if (eventsError) throw eventsError;
           setEvents(eventsData || []);
         }
       } catch (error: any) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast.error("Error fetching data: " + error.message);
       }
     };
 

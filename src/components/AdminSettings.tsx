@@ -112,7 +112,7 @@ const AdminSettings = () => {
         .from('event_types')
         .insert({
           name: newEventName,
-          categoryId: categoryId,
+          categoryid: categoryId, // Changed from categoryId to categoryid
           user_id: user.id
         })
         .select()

@@ -9,12 +9,16 @@ export interface HealthEvent {
 export interface EventCategory {
   id: string;
   name: string;
+  user_id?: string;
+  created_at?: string;
 }
 
 export interface EventType {
   id: string;
   name: string;
-  categoryId: string;
+  categoryid: string; // Changed from categoryId to match database
+  user_id?: string;
+  created_at?: string;
 }
 
 export interface DailySummary {
