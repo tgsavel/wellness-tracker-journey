@@ -5,6 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
+import { format } from "date-fns";
+
+const categoryColors: { [key: string]: string } = {
+  "Bathroom": "bg-blue-100",
+  "Exercise": "bg-green-100",
+  "Medication": "bg-purple-100",
+  "Food": "bg-yellow-100",
+  "Sleep": "bg-indigo-100",
+  "Mood": "bg-pink-100",
+  "Pain": "bg-red-100",
+  "Other": "bg-gray-100"
+};
 
 const DailyTracker = () => {
   const { events, setEvents, eventTypes, categories } = useContext(EventContext);
@@ -59,6 +71,8 @@ const DailyTracker = () => {
     
     return categorySummary;
   };
+
+  const formattedDate = format(new Date(), "EEEE, MMMM d, yyyy");
 
   return (
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
@@ -122,13 +136,21 @@ const DailyTracker = () => {
         )}
 
         <div className="space-y-2">
-          <h3 className="font-semibold">Today's Events</h3>
+          <h3 className="font-semibold flex items-center gap-2">
+            Today's Events
+            <span className="text-muted-foreground font-normal">
+              {formattedDate}
+            </span>
+          </h3>
           
           <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
             <h4 className="font-medium mb-2">Category Summary:</h4>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(getTodaysCategorySummary()).map(([category, count]) => (
-                <div key={category} className="flex justify-between items-center px-3 py-1 bg-background rounded">
+                <div 
+                  key={category} 
+                  className={`flex justify-between items-center px-3 py-1 rounded ${categoryColors[category] || 'bg-gray-100'}`}
+                >
                   <span>{category}:</span>
                   <span className="font-semibold">{count}</span>
                 </div>
@@ -138,24 +160,27 @@ const DailyTracker = () => {
 
           {events
             .filter(event => event.date === new Date().toISOString().split("T")[0])
-            .map((event) => (
-              <div
-                key={event.id}
-                className="p-3 bg-accent rounded-md flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium">
-                    {getCategoryNameForEventType(event.type)}: {event.type}
-                  </p>
-                  {event.notes && (
-                    <p className="text-sm text-gray-600">{event.notes}</p>
-                  )}
+            .map((event) => {
+              const categoryName = getCategoryNameForEventType(event.type);
+              return (
+                <div
+                  key={event.id}
+                  className={`p-3 rounded-md flex justify-between items-center ${categoryColors[categoryName] || 'bg-gray-100'}`}
+                >
+                  <div>
+                    <p className="font-medium">
+                      {categoryName}: {event.type}
+                    </p>
+                    {event.notes && (
+                      <p className="text-sm text-gray-600">{event.notes}</p>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {new Date(event.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
-                <span className="text-sm text-gray-500">
-                  {new Date(event.timestamp).toLocaleTimeString()}
-                </span>
-              </div>
-            ))}
+              )
+            })}
         </div>
       </CardContent>
     </Card>
