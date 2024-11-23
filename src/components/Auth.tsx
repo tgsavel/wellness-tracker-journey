@@ -1,6 +1,4 @@
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
@@ -10,14 +8,15 @@ const Auth = () => {
     const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
     
     try {
-      // Try to sign in first
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: `${email}@example.com`,
-        password,
+      // First check if the user exists
+      const { data: { users } } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: `${email}@example.com`,
+        },
       });
 
-      // If sign in fails, create a new account
-      if (signInError) {
+      if (!users || users.length === 0) {
+        // User doesn't exist, create new account
         const { error: signUpError } = await supabase.auth.signUp({
           email: `${email}@example.com`,
           password,
@@ -30,6 +29,15 @@ const Auth = () => {
 
         if (signUpError) throw signUpError;
       }
+
+      // Now sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: `${email}@example.com`,
+        password,
+      });
+
+      if (signInError) throw signInError;
+      
     } catch (error: any) {
       toast.error(error.message);
     }
