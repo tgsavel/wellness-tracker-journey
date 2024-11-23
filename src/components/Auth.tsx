@@ -13,15 +13,15 @@ const Auth = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      if (session?.user) {
         navigate("/", { replace: true });
       }
     };
     
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
         navigate("/", { replace: true });
       }
     });
@@ -76,7 +76,6 @@ const Auth = () => {
       }
 
       toast.success("Successfully signed in!");
-      navigate("/", { replace: true });
       
     } catch (error: any) {
       toast.error(error.message);
