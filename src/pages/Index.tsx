@@ -19,17 +19,41 @@ const Index = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user) {
+        fetchUsername(session.user.id);
+      }
       setLoading(false);
     });
 
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user) {
+        fetchUsername(session.user.id);
+      }
     });
   }, []);
+
+  const fetchUsername = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching username:', error);
+      return;
+    }
+    
+    if (data) {
+      setUsername(data.username);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -64,7 +88,7 @@ const Index = () => {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted-foreground">
-            {session.user.email}
+            {username}
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

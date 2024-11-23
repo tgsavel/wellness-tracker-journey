@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
 
@@ -15,7 +15,7 @@ const Auth = () => {
     e.preventDefault();
     if (isLoading) return;
     
-    if (!email || !password) {
+    if (!username || !password) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -36,20 +36,23 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
+      // Create a valid email from the username for Supabase auth
+      const email = `${username}@healthtracker.local`;
+      
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
-              username: email.split('@')[0],
+              username,
             },
           },
         });
         if (error) throw error;
         toast({
           title: "Success",
-          description: "Check your email to confirm your account!"
+          description: "Account created successfully!"
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -58,7 +61,7 @@ const Auth = () => {
         });
         if (error) {
           if (error.message === "Invalid login credentials") {
-            throw new Error("Invalid email or password. Please try again.");
+            throw new Error("Invalid username or password. Please try again.");
           }
           throw error;
         }
@@ -76,7 +79,7 @@ const Auth = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, email, password, isSignUp]);
+  }, [isLoading, username, password, isSignUp]);
 
   return (
     <div className="max-w-md w-full mx-auto p-6 space-y-6 bg-card rounded-lg shadow-lg">
@@ -86,20 +89,20 @@ const Auth = () => {
         </h2>
         <p className="text-muted-foreground">
           {isSignUp 
-            ? "Enter your email below to create your account" 
+            ? "Choose a username to create your account" 
             : "Enter your credentials to sign in"}
         </p>
       </div>
 
       <form onSubmit={handleAuth} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="username">Username</Label>
           <Input
-            id="email"
-            type="email"
-            placeholder="m@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="username"
+            type="text"
+            placeholder="johndoe"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             disabled={isLoading}
             required
           />
