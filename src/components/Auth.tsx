@@ -15,6 +15,24 @@ const Auth = () => {
     e.preventDefault();
     if (isLoading) return;
     
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all fields"
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Password must be at least 6 characters long"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -38,7 +56,12 @@ const Auth = () => {
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          if (error.message === "Invalid login credentials") {
+            throw new Error("Invalid email or password. Please try again.");
+          }
+          throw error;
+        }
         toast({
           title: "Success",
           description: "Successfully signed in!"
