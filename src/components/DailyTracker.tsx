@@ -35,6 +35,15 @@ const DailyTracker = () => {
     toast.success("Event added successfully");
   };
 
+  const getCategoryNameForEventType = (eventTypeName: string) => {
+    const eventType = eventTypes.find(type => type.name === eventTypeName);
+    if (eventType) {
+      const category = categories.find(cat => cat.id === eventType.categoryId);
+      return category ? category.name : "";
+    }
+    return "";
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
       <CardHeader>
@@ -106,7 +115,9 @@ const DailyTracker = () => {
                 className="p-3 bg-accent rounded-md flex justify-between items-center"
               >
                 <div>
-                  <p className="font-medium">{event.type}</p>
+                  <p className="font-medium">
+                    {getCategoryNameForEventType(event.type)}: {event.type}
+                  </p>
                   {event.notes && (
                     <p className="text-sm text-gray-600">{event.notes}</p>
                   )}
