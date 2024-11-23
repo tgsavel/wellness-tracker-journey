@@ -39,7 +39,7 @@ const AdminSettings = () => {
           eventTypes.map(type => ({
             id: type.id,
             name: type.name,
-            categoryId: type.categoryId,
+            categoryid: type.categoryid,
             user_id: user.id
           }))
         );
@@ -91,7 +91,7 @@ const AdminSettings = () => {
       if (error) throw error;
 
       setCategories(categories.filter((cat) => cat.id !== categoryId));
-      setEventTypes(eventTypes.filter((type) => type.categoryId !== categoryId));
+      setEventTypes(eventTypes.filter((type) => type.categoryid !== categoryId));
       toast.success("Category and its event types removed successfully");
     } catch (error: any) {
       toast.error("Error removing category: " + error.message);
@@ -112,7 +112,7 @@ const AdminSettings = () => {
         .from('event_types')
         .insert({
           name: newEventName,
-          categoryid: categoryId, // Changed from categoryId to categoryid
+          categoryid: categoryId,
           user_id: user.id
         })
         .select()
@@ -199,7 +199,7 @@ const AdminSettings = () => {
                   </div>
                   <div className="space-y-2">
                     {eventTypes
-                      .filter((type) => type.categoryId === category.id)
+                      .filter((type) => type.categoryid === category.id)
                       .map((type) => (
                         <div
                           key={type.id}

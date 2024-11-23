@@ -27,7 +27,7 @@ export const EventForm = ({
     if (event) {
       const eventType = eventTypes.find(type => type.name === event.type);
       if (eventType) {
-        setSelectedCategory(eventType.categoryId);
+        setSelectedCategory(eventType.categoryid);
         setSelectedType(event.type);
       }
       setNotes(event.notes || "");
@@ -68,7 +68,7 @@ export const EventForm = ({
           </SelectTrigger>
           <SelectContent>
             {eventTypes
-              .filter((type) => type.categoryId === selectedCategory)
+              .filter((type) => type.categoryid === selectedCategory)
               .map((type) => (
                 <SelectItem key={type.id} value={type.name}>
                   {type.name}

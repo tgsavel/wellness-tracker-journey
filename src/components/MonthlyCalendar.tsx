@@ -23,7 +23,7 @@ const MonthlyCalendar = () => {
     categories.forEach(category => {
       const categoryEvents = dayEvents.filter(event => {
         const eventType = eventTypes.find(type => type.name === event.type);
-        return eventType?.categoryId === category.id;
+        return eventType?.categoryid === category.id;
       });
       if (categoryEvents.length > 0) {
         summary[category.name] = categoryEvents.length;

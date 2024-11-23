@@ -21,7 +21,7 @@ export const EventList = ({
   const getCategoryNameForEventType = (eventTypeName: string) => {
     const eventType = eventTypes.find(type => type.name === eventTypeName);
     if (eventType) {
-      const category = categories.find(cat => cat.id === eventType.categoryId);
+      const category = categories.find(cat => cat.id === eventType.categoryid);
       return category ? category.name : "";
     }
     return "";

@@ -117,7 +117,7 @@ const DailyTracker = () => {
     todaysEvents.forEach(event => {
       const eventType = eventTypes.find(type => type.name === event.type);
       if (eventType) {
-        const category = categories.find(cat => cat.id === eventType.categoryId);
+        const category = categories.find(cat => cat.id === eventType.categoryid);
         if (category) {
           categorySummary[category.name] = (categorySummary[category.name] || 0) + 1;
         }
