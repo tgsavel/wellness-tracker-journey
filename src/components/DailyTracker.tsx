@@ -1,24 +1,17 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { HealthEvent } from "@/types/health";
+import { EventContext } from "@/context/EventContext";
 
 const DailyTracker = () => {
-  const [events, setEvents] = useState<HealthEvent[]>([]);
+  const { events, setEvents, eventTypes } = useContext(EventContext);
   const [notes, setNotes] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
-
-  const defaultEventTypes = [
-    { id: "1", name: "Bathroom Visit #1", category: "restroom" },
-    { id: "2", name: "Bathroom Visit #2", category: "restroom" },
-    { id: "3", name: "Headache", category: "symptom" },
-    { id: "4", name: "Nausea", category: "symptom" },
-  ];
 
   const addEvent = () => {
     if (!selectedType) {
@@ -26,7 +19,7 @@ const DailyTracker = () => {
       return;
     }
 
-    const newEvent: HealthEvent = {
+    const newEvent = {
       id: crypto.randomUUID(),
       date: new Date().toISOString().split("T")[0],
       type: selectedType,
@@ -58,7 +51,7 @@ const DailyTracker = () => {
                 <SelectValue placeholder="Select event category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="restroom">Restroom</SelectItem>
+                <SelectItem value="bathroom">Bathroom</SelectItem>
                 <SelectItem value="symptom">Symptom</SelectItem>
               </SelectContent>
             </Select>
@@ -69,7 +62,7 @@ const DailyTracker = () => {
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {defaultEventTypes
+                  {eventTypes
                     .filter((type) => type.category === selectedCategory)
                     .map((type) => (
                       <SelectItem key={type.id} value={type.name}>
@@ -102,7 +95,9 @@ const DailyTracker = () => {
 
         <div className="space-y-2">
           <h3 className="font-semibold">Today's Events</h3>
-          {events.map((event) => (
+          {events
+            .filter(event => event.date === new Date().toISOString().split("T")[0])
+            .map((event) => (
             <div
               key={event.id}
               className="p-3 bg-accent rounded-md flex justify-between items-center"

@@ -1,16 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WeeklySummary as WeeklySummaryType } from "@/types/health";
+import { useContext } from "react";
+import { EventContext } from "@/context/EventContext";
 
 const WeeklySummary = () => {
-  // This would normally come from your backend
-  const mockSummary: WeeklySummaryType = {
-    startDate: "2024-03-18",
-    endDate: "2024-03-24",
-    totalEvents: 14,
-    eventsByType: {
-      "Bathroom Visit #1": 8,
-      "Bathroom Visit #2": 6,
-    },
+  const { events } = useContext(EventContext);
+
+  // Calculate summary from actual events
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
+
+  const weeklyEvents = events.filter(event => {
+    const eventDate = new Date(event.date);
+    return eventDate >= startOfWeek && eventDate <= endOfWeek;
+  });
+
+  const summary: WeeklySummaryType = {
+    startDate: startOfWeek.toISOString().split('T')[0],
+    endDate: endOfWeek.toISOString().split('T')[0],
+    totalEvents: weeklyEvents.length,
+    eventsByType: weeklyEvents.reduce((acc, event) => {
+      acc[event.type] = (acc[event.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>),
   };
 
   return (
@@ -23,18 +39,18 @@ const WeeklySummary = () => {
       <CardContent>
         <div className="space-y-4">
           <p className="text-center text-gray-600">
-            {mockSummary.startDate} to {mockSummary.endDate}
+            {summary.startDate} to {summary.endDate}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-accent rounded-lg">
               <h3 className="font-semibold mb-2">Total Events</h3>
               <p className="text-3xl font-bold text-primary">
-                {mockSummary.totalEvents}
+                {summary.totalEvents}
               </p>
             </div>
             <div className="p-4 bg-secondary rounded-lg">
               <h3 className="font-semibold mb-2">Events by Type</h3>
-              {Object.entries(mockSummary.eventsByType).map(([type, count]) => (
+              {Object.entries(summary.eventsByType).map(([type, count]) => (
                 <div key={type} className="flex justify-between items-center">
                   <span>{type}:</span>
                   <span className="font-semibold">{count}</span>

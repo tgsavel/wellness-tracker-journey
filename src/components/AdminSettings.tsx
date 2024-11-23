@@ -1,31 +1,32 @@
-import { useState } from "react";
+import { useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { EventType } from "@/types/health";
+import { EventContext } from "@/context/EventContext";
+import { useState } from "react";
 
 const AdminSettings = () => {
-  const [eventTypes, setEventTypes] = useState<EventType[]>([
-    { id: "1", name: "Bathroom Visit #1", category: "bathroom" },
-    { id: "2", name: "Bathroom Visit #2", category: "bathroom" },
-  ]);
+  const { eventTypes, setEventTypes } = useContext(EventContext);
   const [newEventName, setNewEventName] = useState("");
+  const [newEventCategory, setNewEventCategory] = useState("");
 
   const addEventType = () => {
-    if (!newEventName.trim()) {
-      toast.error("Please enter an event name");
+    if (!newEventName.trim() || !newEventCategory) {
+      toast.error("Please enter both event name and category");
       return;
     }
 
-    const newType: EventType = {
+    const newType = {
       id: crypto.randomUUID(),
       name: newEventName,
-      category: "bathroom",
+      category: newEventCategory,
     };
 
     setEventTypes([...eventTypes, newType]);
     setNewEventName("");
+    setNewEventCategory("");
     toast.success("Event type added successfully");
   };
 
@@ -42,13 +43,22 @@ const AdminSettings = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="space-y-4">
           <Input
             placeholder="New event type name"
             value={newEventName}
             onChange={(e) => setNewEventName(e.target.value)}
           />
-          <Button onClick={addEventType}>Add</Button>
+          <Select onValueChange={setNewEventCategory} value={newEventCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bathroom">Bathroom</SelectItem>
+              <SelectItem value="symptom">Symptom</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={addEventType} className="w-full">Add Event Type</Button>
         </div>
 
         <div className="space-y-2">
@@ -58,7 +68,10 @@ const AdminSettings = () => {
               key={type.id}
               className="p-3 bg-accent rounded-md flex justify-between items-center"
             >
-              <span>{type.name}</span>
+              <div>
+                <span className="font-medium">{type.name}</span>
+                <span className="ml-2 text-sm text-gray-600">({type.category})</span>
+              </div>
               <Button
                 variant="destructive"
                 size="sm"
