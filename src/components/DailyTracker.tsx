@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
-import { format } from "date-fns";
+import { format, addDays, subDays } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const categoryColors: { [key: string]: string } = {
   "Bathroom": "bg-green-100",
@@ -25,6 +26,7 @@ const DailyTracker = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const addEvent = () => {
     if (!selectedType) {
@@ -34,7 +36,7 @@ const DailyTracker = () => {
 
     const newEvent = {
       id: crypto.randomUUID(),
-      date: new Date().toISOString().split("T")[0],
+      date: format(currentDate, 'yyyy-MM-dd'),
       type: selectedType,
       notes,
       timestamp: new Date().toISOString(),
@@ -48,6 +50,14 @@ const DailyTracker = () => {
     toast.success("Event added successfully");
   };
 
+  const handlePreviousDay = () => {
+    setCurrentDate(prev => subDays(prev, 1));
+  };
+
+  const handleNextDay = () => {
+    setCurrentDate(prev => addDays(prev, 1));
+  };
+
   const getCategoryNameForEventType = (eventTypeName: string) => {
     const eventType = eventTypes.find(type => type.name === eventTypeName);
     if (eventType) {
@@ -58,7 +68,7 @@ const DailyTracker = () => {
   };
 
   const getTodaysCategorySummary = () => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = format(currentDate, 'yyyy-MM-dd');
     const todaysEvents = events.filter(event => event.date === today);
     
     const categorySummary: Record<string, number> = {};
@@ -73,7 +83,7 @@ const DailyTracker = () => {
     return categorySummary;
   };
 
-  const formattedDate = format(new Date(), "EEEE, MMMM d, yyyy");
+  const formattedDate = format(currentDate, "EEEE, MMMM d, yyyy");
 
   return (
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
@@ -81,6 +91,27 @@ const DailyTracker = () => {
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl font-bold">Daily Health Tracker</CardTitle>
           <Button onClick={() => setShowForm(true)}>Add Event</Button>
+        </div>
+        <div className="flex items-center justify-between mt-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePreviousDay}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-muted-foreground font-semibold">
+            {formattedDate}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNextDay}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -137,13 +168,6 @@ const DailyTracker = () => {
         )}
 
         <div className="space-y-2">
-          <h3 className="font-semibold flex items-center gap-2">
-            Today's Events
-            <span className="text-muted-foreground font-semibold text-lg">
-              {formattedDate}
-            </span>
-          </h3>
-          
           <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
             <h4 className="font-medium mb-2">Category Summary:</h4>
             <div className="grid grid-cols-2 gap-2">
@@ -160,7 +184,7 @@ const DailyTracker = () => {
           </div>
 
           {events
-            .filter(event => event.date === new Date().toISOString().split("T")[0])
+            .filter(event => event.date === format(currentDate, 'yyyy-MM-dd'))
             .map((event) => {
               const categoryName = getCategoryNameForEventType(event.type);
               return (
