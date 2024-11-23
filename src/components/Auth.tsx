@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -29,17 +29,27 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Check your email to confirm your account!");
+        toast({
+          title: "Success",
+          description: "Check your email to confirm your account!"
+        });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        toast.success("Successfully signed in!");
+        toast({
+          title: "Success",
+          description: "Successfully signed in!"
+        });
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
     } finally {
       setIsLoading(false);
     }
