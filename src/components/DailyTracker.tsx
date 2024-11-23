@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
 
 const DailyTracker = () => {
-  const { events, setEvents, eventTypes } = useContext(EventContext);
+  const { events, setEvents, eventTypes, categories } = useContext(EventContext);
   const [notes, setNotes] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -51,9 +51,9 @@ const DailyTracker = () => {
                 <SelectValue placeholder="Select event category" />
               </SelectTrigger>
               <SelectContent>
-                {[...new Set(eventTypes.map(type => type.categoryId))].map(categoryId => (
-                  <SelectItem key={categoryId} value={categoryId}>
-                    {categoryId}
+                {categories.map(category => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
