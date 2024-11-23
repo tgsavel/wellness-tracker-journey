@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -7,42 +7,12 @@ const MIN_DELAY_MS = 5000;
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const lastAttemptTime = useRef<number>(0);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        navigate("/", { replace: true });
-      }
-    };
-    
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        navigate("/", { replace: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
 
   const handleSignInWithEmail = useCallback(async (email: string) => {
     if (isLoading) return;
     
-    const now = Date.now();
-    const timeSinceLastAttempt = now - lastAttemptTime.current;
-    
-    if (timeSinceLastAttempt < MIN_DELAY_MS) {
-      const waitTime = Math.ceil((MIN_DELAY_MS - timeSinceLastAttempt) / 1000);
-      toast.error(`Please wait ${waitTime} seconds before trying again`);
-      return;
-    }
-    
     setIsLoading(true);
-    lastAttemptTime.current = now;
     
     try {
       const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
@@ -67,21 +37,16 @@ const Auth = () => {
       }
 
       if (!signUpData.user) {
-        const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: `${email}@example.com`,
           password,
         });
 
         if (signInError) throw signInError;
-        
-        if (signInData.user) {
-          toast.success("Successfully signed in!");
-          navigate("/", { replace: true });
-        }
-      } else {
-        toast.success("Successfully signed up and logged in!");
-        navigate("/", { replace: true });
       }
+      
+      toast.success("Successfully logged in!");
+      navigate("/", { replace: true });
       
     } catch (error: any) {
       toast.error(error.message);
