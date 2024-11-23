@@ -21,7 +21,7 @@ const Auth = () => {
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
+      if (event === 'SIGNED_IN' && session?.user) {
         navigate("/", { replace: true });
       }
     });
@@ -67,15 +67,21 @@ const Auth = () => {
       }
 
       if (!signUpData.user) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
           email: `${email}@example.com`,
           password,
         });
 
         if (signInError) throw signInError;
+        
+        if (signInData.user) {
+          toast.success("Successfully signed in!");
+          navigate("/", { replace: true });
+        }
+      } else {
+        toast.success("Successfully signed up and logged in!");
+        navigate("/", { replace: true });
       }
-
-      toast.success("Successfully signed in!");
       
     } catch (error: any) {
       toast.error(error.message);
