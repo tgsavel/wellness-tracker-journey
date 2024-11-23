@@ -1,72 +1,114 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleSignIn = useCallback(async (email: string) => {
+  const handleAuth = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
     if (isLoading) return;
     
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          data: {
-            username: email.split('@')[0], // Use the part before @ as username
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username: email.split('@')[0],
+            },
           },
-        },
-      });
-
-      if (error) throw error;
-      
-      toast.success("Check your email for the login link!");
-      
+        });
+        if (error) throw error;
+        toast.success("Check your email to confirm your account!");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        toast.success("Successfully signed in!");
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, email, password, isSignUp]);
 
   return (
-    <div className="max-w-md w-full mx-auto p-4">
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          await handleSignIn(email);
-        }}
-        className="space-y-4"
-      >
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
+    <div className="max-w-md w-full mx-auto p-6 space-y-6 bg-card rounded-lg shadow-lg">
+      <div className="space-y-2 text-center">
+        <h2 className="text-2xl font-bold tracking-tight">
+          {isSignUp ? "Create an account" : "Welcome back"}
+        </h2>
+        <p className="text-muted-foreground">
+          {isSignUp 
+            ? "Enter your email below to create your account" 
+            : "Enter your credentials to sign in"}
+        </p>
+      </div>
+
+      <form onSubmit={handleAuth} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
             id="email"
-            name="email"
             type="email"
-            required
+            placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="Enter your email"
+            required
           />
         </div>
-        <button
+        
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            required
+            minLength={6}
+          />
+        </div>
+
+        <Button
           type="submit"
+          className="w-full"
           disabled={isLoading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Please wait..." : "Send Magic Link"}
-        </button>
+          {isLoading 
+            ? "Please wait..." 
+            : isSignUp 
+              ? "Create account" 
+              : "Sign in"}
+        </Button>
       </form>
+
+      <div className="text-center">
+        <Button
+          variant="link"
+          onClick={() => setIsSignUp(!isSignUp)}
+          disabled={isLoading}
+        >
+          {isSignUp 
+            ? "Already have an account? Sign in" 
+            : "Don't have an account? Sign up"}
+        </Button>
+      </div>
     </div>
   );
 };
