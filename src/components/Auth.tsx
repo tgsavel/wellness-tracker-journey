@@ -1,12 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback, useState, useRef } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const MIN_DELAY_MS = 5000; // 5 seconds minimum delay between attempts
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const lastAttemptTime = useRef<number>(0);
+  const navigate = useNavigate();
 
   const handleSignInWithEmail = useCallback(async (email: string) => {
     if (isLoading) return;
@@ -57,12 +59,15 @@ const Auth = () => {
         if (signInError) throw signInError;
       }
       
+      toast.success("Successfully signed in!");
+      navigate("/");
+      
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, navigate]);
 
   return (
     <div className="max-w-md w-full mx-auto p-4">
