@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventContext } from "@/context/EventContext";
 import { format, addMonths } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CalendarHeader } from "./calendar/CalendarHeader";
 import { DayEventsDialog } from "./calendar/DayEventsDialog";
 
 const MonthlyCalendar = () => {
@@ -38,25 +37,8 @@ const MonthlyCalendar = () => {
     setSelectedDate(date);
   };
 
-  const handlePrevMonth = () => {
-    const prevMonth = new Date(currentMonth);
-    prevMonth.setMonth(prevMonth.getMonth() - 1);
-    setCurrentMonth(prevMonth);
-  };
-
-  const handleNextMonth = () => {
-    const nextMonth = new Date(currentMonth);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    setCurrentMonth(nextMonth);
-  };
-
   const renderCalendar = (month: Date) => (
     <div className="w-full">
-      <CalendarHeader
-        currentMonth={month}
-        onPrevMonth={handlePrevMonth}
-        onNextMonth={handleNextMonth}
-      />
       <TooltipProvider>
         <Calendar
           mode="single"
