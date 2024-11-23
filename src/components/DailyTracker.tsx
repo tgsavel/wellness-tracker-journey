@@ -44,6 +44,22 @@ const DailyTracker = () => {
     return "";
   };
 
+  const getTodaysCategorySummary = () => {
+    const today = new Date().toISOString().split("T")[0];
+    const todaysEvents = events.filter(event => event.date === today);
+    
+    const categorySummary: Record<string, number> = {};
+    
+    todaysEvents.forEach(event => {
+      const categoryName = getCategoryNameForEventType(event.type);
+      if (categoryName) {
+        categorySummary[categoryName] = (categorySummary[categoryName] || 0) + 1;
+      }
+    });
+    
+    return categorySummary;
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
       <CardHeader>
@@ -107,6 +123,19 @@ const DailyTracker = () => {
 
         <div className="space-y-2">
           <h3 className="font-semibold">Today's Events</h3>
+          
+          <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
+            <h4 className="font-medium mb-2">Category Summary:</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(getTodaysCategorySummary()).map(([category, count]) => (
+                <div key={category} className="flex justify-between items-center px-3 py-1 bg-background rounded">
+                  <span>{category}:</span>
+                  <span className="font-semibold">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {events
             .filter(event => event.date === new Date().toISOString().split("T")[0])
             .map((event) => (
