@@ -1,9 +1,11 @@
 import { createContext, useState, ReactNode, useEffect } from "react";
-import { HealthEvent, EventType, EventCategory } from "@/types/health";
+import { Event, EventType, EventCategory } from "@/types/health";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface EventContextType {
-  events: HealthEvent[];
-  setEvents: (events: HealthEvent[]) => void;
+  events: Event[];
+  setEvents: (events: Event[]) => void;
   eventTypes: EventType[];
   setEventTypes: (types: EventType[]) => void;
   categories: EventCategory[];
@@ -20,40 +22,78 @@ export const EventContext = createContext<EventContextType>({
 });
 
 export const EventProvider = ({ children }: { children: ReactNode }) => {
-  const [events, setEvents] = useState<HealthEvent[]>(() => {
-    const saved = localStorage.getItem('health-events');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [events, setEvents] = useState<Event[]>([]);
+  const [categories, setCategories] = useState<EventCategory[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
 
-  const [categories, setCategories] = useState<EventCategory[]>(() => {
-    const saved = localStorage.getItem('health-categories');
-    return saved ? JSON.parse(saved) : [
-      { id: "1", name: "Bathroom" },
-    ];
-  });
-
-  const [eventTypes, setEventTypes] = useState<EventType[]>(() => {
-    const saved = localStorage.getItem('health-event-types');
-    return saved ? JSON.parse(saved) : [
-      { id: "1", name: "Bathroom Visit #1", categoryId: "1" },
-      { id: "2", name: "Bathroom Visit #2", categoryId: "1" },
-    ];
-  });
-
-  // Persist events to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('health-events', JSON.stringify(events));
-  }, [events]);
+    const fetchData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Fetch categories
+          const { data: categoriesData, error: categoriesError } = await supabase
+            .from('categories')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (categoriesError) throw categoriesError;
+          setCategories(categoriesData || []);
 
-  // Persist categories to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('health-categories', JSON.stringify(categories));
-  }, [categories]);
+          // Fetch event types
+          const { data: eventTypesData, error: eventTypesError } = await supabase
+            .from('event_types')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (eventTypesError) throw eventTypesError;
+          setEventTypes(eventTypesData || []);
 
-  // Persist event types to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('health-event-types', JSON.stringify(eventTypes));
-  }, [eventTypes]);
+          // Fetch events
+          const { data: eventsData, error: eventsError } = await supabase
+            .from('events')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (eventsError) throw eventsError;
+          setEvents(eventsData || []);
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchData();
+
+    // Subscribe to realtime changes
+    const eventsSubscription = supabase
+      .channel('events-channel')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'events' 
+      }, payload => {
+        if (payload.eventType === 'INSERT') {
+          setEvents(current => [...current, payload.new as Event]);
+        } else if (payload.eventType === 'DELETE') {
+          setEvents(current => current.filter(event => event.id !== payload.old.id));
+        } else if (payload.eventType === 'UPDATE') {
+          setEvents(current => current.map(event => 
+            event.id === payload.new.id ? payload.new as Event : event
+          ));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      eventsSubscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <EventContext.Provider 

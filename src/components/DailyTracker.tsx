@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Event } from "@/types/health";
 import { EventForm } from "./events/EventForm";
 import { EventList } from "./events/EventList";
+import { supabase } from "@/integrations/supabase/client";
 
 const categoryColors: { [key: string]: string } = {
   "Bathroom": "bg-green-100",
@@ -35,29 +36,55 @@ const DailyTracker = () => {
     setCurrentDate(prev => addDays(prev, 1));
   };
 
-  const handleSaveEvent = (eventData: Partial<Event>) => {
-    if (editingEvent) {
-      // Update existing event
-      setEvents(events.map(event => 
-        event.id === editingEvent.id 
-          ? { ...event, ...eventData }
-          : event
-      ));
-      setEditingEvent(null);
-      toast.success("Event updated successfully");
-    } else {
-      // Add new event
-      const newEvent: Event = {
-        id: crypto.randomUUID(),
-        date: format(currentDate, 'yyyy-MM-dd'),
-        type: eventData.type!,
-        notes: eventData.notes,
-        timestamp: new Date().toISOString(),
-      };
-      setEvents([...events, newEvent]);
-      toast.success("Event added successfully");
+  const handleSaveEvent = async (eventData: Partial<Event>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (editingEvent) {
+        // Update existing event
+        const { error } = await supabase
+          .from('events')
+          .update({
+            type: eventData.type,
+            notes: eventData.notes,
+            date: format(currentDate, 'yyyy-MM-dd'),
+            timestamp: new Date().toISOString(),
+          })
+          .eq('id', editingEvent.id);
+
+        if (error) throw error;
+        
+        setEvents(events.map(event => 
+          event.id === editingEvent.id 
+            ? { ...event, ...eventData }
+            : event
+        ));
+        setEditingEvent(null);
+        toast.success("Event updated successfully");
+      } else {
+        // Add new event
+        const { data, error } = await supabase
+          .from('events')
+          .insert({
+            date: format(currentDate, 'yyyy-MM-dd'),
+            type: eventData.type!,
+            notes: eventData.notes,
+            timestamp: new Date().toISOString(),
+            user_id: user.id
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        setEvents([...events, data as Event]);
+        toast.success("Event added successfully");
+      }
+      setShowForm(false);
+    } catch (error: any) {
+      toast.error("Error saving event: " + error.message);
     }
-    setShowForm(false);
   };
 
   const handleEditEvent = (event: Event) => {
@@ -65,8 +92,20 @@ const DailyTracker = () => {
     setShowForm(true);
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.filter(event => event.id !== eventId));
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      setEvents(events.filter(event => event.id !== eventId));
+      toast.success("Event deleted successfully");
+    } catch (error: any) {
+      toast.error("Error deleting event: " + error.message);
+    }
   };
 
   const formattedDate = format(currentDate, "EEEE, MMMM d, yyyy");

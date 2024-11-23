@@ -7,58 +7,141 @@ import { EventContext } from "@/context/EventContext";
 import { EventType, EventCategory } from "@/types/health";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminSettings = () => {
   const { eventTypes, setEventTypes, categories, setCategories } = useContext(EventContext);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newEventName, setNewEventName] = useState("");
 
-  const handleSave = () => {
-    toast.success("All changes have been saved successfully!");
+  const handleSave = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Update categories
+      const { error: categoriesError } = await supabase
+        .from('categories')
+        .upsert(
+          categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            user_id: user.id
+          }))
+        );
+      
+      if (categoriesError) throw categoriesError;
+
+      // Update event types
+      const { error: eventTypesError } = await supabase
+        .from('event_types')
+        .upsert(
+          eventTypes.map(type => ({
+            id: type.id,
+            name: type.name,
+            categoryId: type.categoryId,
+            user_id: user.id
+          }))
+        );
+      
+      if (eventTypesError) throw eventTypesError;
+
+      toast.success("All changes have been saved successfully!");
+    } catch (error: any) {
+      toast.error("Error saving changes: " + error.message);
+    }
   };
 
-  const addCategory = () => {
+  const addCategory = async () => {
     if (!newCategoryName.trim()) {
       toast.error("Please enter a category name");
       return;
     }
 
-    const newCategory: EventCategory = {
-      id: crypto.randomUUID(),
-      name: newCategoryName,
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-    setCategories([...categories, newCategory]);
-    setNewCategoryName("");
-    toast.success("Category added successfully");
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({
+          name: newCategoryName,
+          user_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCategories([...categories, data as EventCategory]);
+      setNewCategoryName("");
+      toast.success("Category added successfully");
+    } catch (error: any) {
+      toast.error("Error adding category: " + error.message);
+    }
   };
 
-  const removeCategory = (categoryId: string) => {
-    setCategories(categories.filter((cat) => cat.id !== categoryId));
-    setEventTypes(eventTypes.filter((type) => type.categoryId !== categoryId));
-    toast.success("Category and its event types removed successfully");
+  const removeCategory = async (categoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryId);
+
+      if (error) throw error;
+
+      setCategories(categories.filter((cat) => cat.id !== categoryId));
+      setEventTypes(eventTypes.filter((type) => type.categoryId !== categoryId));
+      toast.success("Category and its event types removed successfully");
+    } catch (error: any) {
+      toast.error("Error removing category: " + error.message);
+    }
   };
 
-  const addEventType = (categoryId: string) => {
+  const addEventType = async (categoryId: string) => {
     if (!newEventName.trim()) {
       toast.error("Please enter an event name");
       return;
     }
 
-    const newType: EventType = {
-      id: crypto.randomUUID(),
-      name: newEventName,
-      categoryId: categoryId,
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-    setEventTypes([...eventTypes, newType]);
-    setNewEventName("");
-    toast.success("Event type added successfully");
+      const { data, error } = await supabase
+        .from('event_types')
+        .insert({
+          name: newEventName,
+          categoryId: categoryId,
+          user_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setEventTypes([...eventTypes, data as EventType]);
+      setNewEventName("");
+      toast.success("Event type added successfully");
+    } catch (error: any) {
+      toast.error("Error adding event type: " + error.message);
+    }
   };
 
-  const removeEventType = (id: string) => {
-    setEventTypes(eventTypes.filter((type) => type.id !== id));
-    toast.success("Event type removed successfully");
+  const removeEventType = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('event_types')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setEventTypes(eventTypes.filter((type) => type.id !== id));
+      toast.success("Event type removed successfully");
+    } catch (error: any) {
+      toast.error("Error removing event type: " + error.message);
+    }
   };
 
   return (
