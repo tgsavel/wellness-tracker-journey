@@ -1,9 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 const Auth = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSignInWithEmail = useCallback(async (email: string) => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
     // Generate a secure random password for the user
     const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
     
@@ -19,7 +24,14 @@ const Auth = () => {
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        if (signUpError.message.includes('rate_limit')) {
+          toast.error("Please wait a minute before trying again");
+        } else {
+          throw signUpError;
+        }
+        return;
+      }
 
       // If user already exists (signUpData.user is null), try to sign in
       if (!signUpData.user) {
@@ -33,8 +45,10 @@ const Auth = () => {
       
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [isLoading]);
 
   return (
     <div className="max-w-md w-full mx-auto p-4">
@@ -56,15 +70,17 @@ const Auth = () => {
             name="email"
             type="text"
             required
+            disabled={isLoading}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
             placeholder="Enter your username"
           />
         </div>
         <button
           type="submit"
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          disabled={isLoading}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Continue
+          {isLoading ? "Please wait..." : "Continue"}
         </button>
       </form>
     </div>
