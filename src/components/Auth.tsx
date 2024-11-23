@@ -20,7 +20,7 @@ const Auth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === 'SIGNED_IN' && session) {
         navigate("/");
       }
     });
@@ -43,10 +43,10 @@ const Auth = () => {
     setIsLoading(true);
     lastAttemptTime.current = now;
     
-    // Generate a secure random password for the user
-    const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
-    
     try {
+      // Generate a secure random password for the user
+      const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      
       // Create new account
       const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: `${email}@example.com`,

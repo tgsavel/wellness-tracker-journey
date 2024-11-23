@@ -39,6 +39,7 @@ const Index = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setSession(null);
     toast.success("Logged out successfully");
   };
 
