@@ -3,7 +3,7 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-const MIN_DELAY_MS = 5000; // 5 seconds minimum delay between attempts
+const MIN_DELAY_MS = 5000;
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,14 +11,12 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/");
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         navigate("/");
@@ -44,10 +42,8 @@ const Auth = () => {
     lastAttemptTime.current = now;
     
     try {
-      // Generate a secure random password for the user
       const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
       
-      // Create new account
       const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: `${email}@example.com`,
         password,
@@ -67,7 +63,7 @@ const Auth = () => {
         return;
       }
 
-      // If user already exists (signUpData.user is null), try to sign in
+      // If user already exists, try to sign in
       if (!signUpData.user) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: `${email}@example.com`,
@@ -76,15 +72,16 @@ const Auth = () => {
 
         if (signInError) throw signInError;
       }
-      
+
       toast.success("Successfully signed in!");
+      navigate("/");
       
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, navigate]);
 
   return (
     <div className="max-w-md w-full mx-auto p-4">
