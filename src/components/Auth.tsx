@@ -1,14 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { toast } from "sonner";
+
+const MIN_DELAY_MS = 5000; // 5 seconds minimum delay between attempts
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const lastAttemptTime = useRef<number>(0);
 
   const handleSignInWithEmail = useCallback(async (email: string) => {
     if (isLoading) return;
     
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastAttemptTime.current;
+    
+    if (timeSinceLastAttempt < MIN_DELAY_MS) {
+      const waitTime = Math.ceil((MIN_DELAY_MS - timeSinceLastAttempt) / 1000);
+      toast.error(`Please wait ${waitTime} seconds before trying again`);
+      return;
+    }
+    
     setIsLoading(true);
+    lastAttemptTime.current = now;
+    
     // Generate a secure random password for the user
     const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
     
@@ -26,7 +40,7 @@ const Auth = () => {
 
       if (signUpError) {
         if (signUpError.message.includes('rate_limit')) {
-          toast.error("Please wait a minute before trying again");
+          toast.error("Please wait a few seconds before trying again");
         } else {
           throw signUpError;
         }
