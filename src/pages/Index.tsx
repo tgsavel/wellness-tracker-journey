@@ -39,19 +39,23 @@ const Index = () => {
   }, []);
 
   const fetchUsername = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching username:', error);
+        return;
+      }
+      
+      if (data) {
+        setUsername(data.username);
+      }
+    } catch (error) {
       console.error('Error fetching username:', error);
-      return;
-    }
-    
-    if (data) {
-      setUsername(data.username);
     }
   };
 
