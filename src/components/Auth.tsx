@@ -3,7 +3,7 @@ import { useCallback, useState, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-const MIN_DELAY_MS = 4000; // 4 seconds to match Supabase's rate limit
+const MIN_DELAY_MS = 5000; // 5 seconds to be safe with Supabase's rate limit
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,12 +39,11 @@ const Auth = () => {
       });
 
       if (signUpError) {
-        if (signUpError.message.includes('rate_limit')) {
-          toast.error("Please wait a few seconds before trying again");
-        } else {
-          throw signUpError;
+        if (signUpError.message.includes('rate_limit') || signUpError.message.includes('429')) {
+          toast.error("Too many attempts. Please wait a few minutes before trying again.");
+          return;
         }
-        return;
+        throw signUpError;
       }
 
       if (!signUpData.user) {
@@ -53,7 +52,13 @@ const Auth = () => {
           password,
         });
 
-        if (signInError) throw signInError;
+        if (signInError) {
+          if (signInError.message.includes('rate_limit') || signInError.message.includes('429')) {
+            toast.error("Too many attempts. Please wait a few minutes before trying again.");
+            return;
+          }
+          throw signInError;
+        }
       }
       
       toast.success("Successfully logged in!");
