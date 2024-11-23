@@ -11,6 +11,7 @@ const DailyTracker = () => {
   const [notes, setNotes] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("");
 
   const defaultEventTypes = [
     { id: "1", name: "Bathroom Visit #1", category: "restroom" },
@@ -19,11 +20,16 @@ const DailyTracker = () => {
     { id: "4", name: "Nausea", category: "symptom" },
   ];
 
-  const addEvent = (type: string) => {
+  const addEvent = () => {
+    if (!selectedType) {
+      toast.error("Please select an event type");
+      return;
+    }
+
     const newEvent: HealthEvent = {
       id: crypto.randomUUID(),
       date: new Date().toISOString().split("T")[0],
-      type,
+      type: selectedType,
       notes,
       timestamp: new Date().toISOString(),
     };
@@ -31,6 +37,8 @@ const DailyTracker = () => {
     setEvents([...events, newEvent]);
     setNotes("");
     setShowForm(false);
+    setSelectedType("");
+    setSelectedCategory("");
     toast.success("Event added successfully");
   };
 
@@ -56,7 +64,7 @@ const DailyTracker = () => {
             </Select>
 
             {selectedCategory && (
-              <Select onValueChange={(value) => addEvent(value)}>
+              <Select onValueChange={setSelectedType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
@@ -77,6 +85,18 @@ const DailyTracker = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => {
+                setShowForm(false);
+                setSelectedType("");
+                setSelectedCategory("");
+                setNotes("");
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={addEvent}>Save Event</Button>
+            </div>
           </div>
         )}
 
