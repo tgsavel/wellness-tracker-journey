@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,24 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const lastAttemptTime = useRef<number>(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleSignInWithEmail = useCallback(async (email: string) => {
     if (isLoading) return;
@@ -60,14 +78,13 @@ const Auth = () => {
       }
       
       toast.success("Successfully signed in!");
-      navigate("/");
       
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, navigate]);
+  }, [isLoading]);
 
   return (
     <div className="max-w-md w-full mx-auto p-4">
