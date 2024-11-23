@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MonthlyCalendar = () => {
-  const { events, categories } = useContext(EventContext);
+  const { events, categories, eventTypes } = useContext(EventContext);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const navigate = useNavigate();
 
