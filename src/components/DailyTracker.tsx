@@ -79,7 +79,7 @@ const DailyTracker = () => {
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="text-2xl font-bold">Daily Health Tracker</CardTitle>
+          <CardTitle className="text-xl font-bold">Daily Health Tracker</CardTitle>
           <Button onClick={() => setShowForm(true)}>Add Event</Button>
         </div>
       </CardHeader>
