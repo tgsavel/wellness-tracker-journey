@@ -8,14 +8,13 @@ const Auth = () => {
     const password = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
     
     try {
-      // First check if the user exists
-      const { data: { users } } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: `${email}@example.com`,
-        },
+      // First try to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: `${email}@example.com`,
+        password,
       });
 
-      if (!users || users.length === 0) {
+      if (signInError?.message === "Invalid login credentials") {
         // User doesn't exist, create new account
         const { error: signUpError } = await supabase.auth.signUp({
           email: `${email}@example.com`,
@@ -28,15 +27,18 @@ const Auth = () => {
         });
 
         if (signUpError) throw signUpError;
+
+        // Try signing in again after creating the account
+        const { error: secondSignInError } = await supabase.auth.signInWithPassword({
+          email: `${email}@example.com`,
+          password,
+        });
+
+        if (secondSignInError) throw secondSignInError;
+      } else if (signInError) {
+        // If there's any other error besides invalid credentials
+        throw signInError;
       }
-
-      // Now sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: `${email}@example.com`,
-        password,
-      });
-
-      if (signInError) throw signInError;
       
     } catch (error: any) {
       toast.error(error.message);
