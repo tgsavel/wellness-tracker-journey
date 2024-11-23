@@ -4,6 +4,7 @@ import { WeeklySummary as WeeklySummaryType } from "@/types/health";
 import { useContext, useState } from "react";
 import { EventContext } from "@/context/EventContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
 
 const WeeklySummary = () => {
   const { events, eventTypes, categories } = useContext(EventContext);
@@ -94,7 +95,7 @@ const WeeklySummary = () => {
       <CardContent>
         <div className="space-y-4">
           <p className="text-center text-gray-600">
-            {summary.startDate} to {summary.endDate}
+            {format(startOfWeek, "MMMM d, yyyy")} to {format(endOfWeek, "MMMM d, yyyy")}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-accent rounded-lg">
