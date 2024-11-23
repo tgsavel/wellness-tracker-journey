@@ -1,23 +1,62 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { WeeklySummary as WeeklySummaryType } from "@/types/health";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { EventContext } from "@/context/EventContext";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WeeklySummary = () => {
   const { events } = useContext(EventContext);
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  // Calculate summary from actual events
-  const today = new Date();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay());
-  
-  const endOfWeek = new Date(today);
-  endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
+  // Calculate dates for the selected week
+  const getWeekDates = (offset: number) => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + (offset * 7));
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    return { startOfWeek, endOfWeek };
+  };
+
+  const { startOfWeek, endOfWeek } = getWeekDates(weekOffset);
 
   const weeklyEvents = events.filter(event => {
     const eventDate = new Date(event.date);
     return eventDate >= startOfWeek && eventDate <= endOfWeek;
   });
+
+  const getCategoryNameForEventType = (eventTypeName: string) => {
+    const eventType = eventTypes.find(type => type.name === eventTypeName);
+    if (eventType) {
+      const category = categories.find(cat => cat.id === eventType.categoryId);
+      return category ? category.name : "";
+    }
+    return "";
+  };
+
+  const getWeeklyCategorySummary = () => {
+    const categorySummary: Record<string, { total: number; average: number }> = {};
+    
+    weeklyEvents.forEach(event => {
+      const categoryName = getCategoryNameForEventType(event.type);
+      if (categoryName) {
+        if (!categorySummary[categoryName]) {
+          categorySummary[categoryName] = { total: 0, average: 0 };
+        }
+        categorySummary[categoryName].total += 1;
+      }
+    });
+
+    // Calculate daily averages
+    Object.keys(categorySummary).forEach(category => {
+      categorySummary[category].average = Number((categorySummary[category].total / 7).toFixed(1));
+    });
+
+    return categorySummary;
+  };
 
   const summary: WeeklySummaryType = {
     startDate: startOfWeek.toISOString().split('T')[0],
@@ -32,9 +71,25 @@ const WeeklySummary = () => {
   return (
     <Card className="w-full max-w-2xl mx-auto mt-8 animate-fade-in">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">
-          Weekly Summary
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => setWeekOffset(prev => prev - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <CardTitle className="text-2xl font-bold text-center">
+            Weekly Summary
+          </CardTitle>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => setWeekOffset(prev => prev + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -49,11 +104,17 @@ const WeeklySummary = () => {
               </p>
             </div>
             <div className="p-4 bg-secondary rounded-lg">
-              <h3 className="font-semibold mb-2">Events by Type</h3>
-              {Object.entries(summary.eventsByType).map(([type, count]) => (
-                <div key={type} className="flex justify-between items-center">
-                  <span>{type}:</span>
-                  <span className="font-semibold">{count}</span>
+              <h3 className="font-semibold mb-2">Category Summary</h3>
+              {Object.entries(getWeeklyCategorySummary()).map(([category, stats]) => (
+                <div key={category} className="flex flex-col space-y-1 mb-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{category}:</span>
+                    <span className="font-semibold">{stats.total}</span>
+                  </div>
+                  <div className="text-sm text-gray-600 flex justify-between items-center">
+                    <span>Daily Average:</span>
+                    <span>{stats.average}</span>
+                  </div>
                 </div>
               ))}
             </div>
