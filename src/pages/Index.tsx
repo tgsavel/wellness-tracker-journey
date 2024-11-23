@@ -1,12 +1,27 @@
 import DailyTracker from "@/components/DailyTracker";
 import WeeklySummary from "@/components/WeeklySummary";
 import MonthlyCalendar from "@/components/MonthlyCalendar";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Sun, Mountain, Stethoscope } from "lucide-react";
+import { Settings, Sun, Mountain, Stethoscope } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
+
+  const handleLogin = () => {
+    toast.info("Login functionality will be implemented soon");
+  };
+
+  const handleLogout = () => {
+    toast.info("Logout functionality will be implemented soon");
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 space-y-8">
@@ -19,9 +34,24 @@ const Index = () => {
           </div>
           <h1 className="text-4xl font-bold text-primary ml-4">Health Event Tracker</h1>
         </div>
-        <Button variant="outline" onClick={() => navigate("/admin")}>
-          Admin Settings
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleLogin}>
+              Login
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
+              Logout
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/admin")}>
+              Admin Settings
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <DailyTracker />
       <WeeklySummary />
