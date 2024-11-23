@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
 import { useState } from "react";
+import { EventType } from "@/types/health";
 
 const AdminSettings = () => {
   const { eventTypes, setEventTypes } = useContext(EventContext);
   const [newEventName, setNewEventName] = useState("");
-  const [newEventCategory, setNewEventCategory] = useState("");
+  const [newEventCategory, setNewEventCategory] = useState<"bathroom" | "other">("bathroom");
 
   const addEventType = () => {
     if (!newEventName.trim() || !newEventCategory) {
@@ -18,7 +19,7 @@ const AdminSettings = () => {
       return;
     }
 
-    const newType = {
+    const newType: EventType = {
       id: crypto.randomUUID(),
       name: newEventName,
       category: newEventCategory,
@@ -26,7 +27,7 @@ const AdminSettings = () => {
 
     setEventTypes([...eventTypes, newType]);
     setNewEventName("");
-    setNewEventCategory("");
+    setNewEventCategory("bathroom");
     toast.success("Event type added successfully");
   };
 
@@ -49,13 +50,13 @@ const AdminSettings = () => {
             value={newEventName}
             onChange={(e) => setNewEventName(e.target.value)}
           />
-          <Select onValueChange={setNewEventCategory} value={newEventCategory}>
+          <Select onValueChange={(value: "bathroom" | "other") => setNewEventCategory(value)} value={newEventCategory}>
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="bathroom">Bathroom</SelectItem>
-              <SelectItem value="symptom">Symptom</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={addEventType} className="w-full">Add Event Type</Button>
