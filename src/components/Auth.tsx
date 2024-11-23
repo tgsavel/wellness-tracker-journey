@@ -11,15 +11,18 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        navigate("/", { replace: true });
       }
-    });
+    };
+    
+    checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate("/");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate("/", { replace: true });
       }
     });
 
@@ -63,7 +66,6 @@ const Auth = () => {
         return;
       }
 
-      // If user already exists, try to sign in
       if (!signUpData.user) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: `${email}@example.com`,
@@ -74,7 +76,7 @@ const Auth = () => {
       }
 
       toast.success("Successfully signed in!");
-      navigate("/");
+      navigate("/", { replace: true });
       
     } catch (error: any) {
       toast.error(error.message);
