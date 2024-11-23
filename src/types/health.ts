@@ -6,10 +6,15 @@ export interface HealthEvent {
   timestamp: string;
 }
 
+export interface EventCategory {
+  id: string;
+  name: string;
+}
+
 export interface EventType {
   id: string;
   name: string;
-  category: "bathroom" | "other";
+  categoryId: string;
 }
 
 export interface DailySummary {

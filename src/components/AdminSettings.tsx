@@ -1,33 +1,54 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
-import { useState } from "react";
-import { EventType } from "@/types/health";
+import { EventType, EventCategory } from "@/types/health";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const AdminSettings = () => {
-  const { eventTypes, setEventTypes } = useContext(EventContext);
+  const { eventTypes, setEventTypes, categories, setCategories } = useContext(EventContext);
+  const [newCategoryName, setNewCategoryName] = useState("");
   const [newEventName, setNewEventName] = useState("");
-  const [newEventCategory, setNewEventCategory] = useState<"bathroom" | "other">("bathroom");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
-  const addEventType = () => {
-    if (!newEventName.trim() || !newEventCategory) {
-      toast.error("Please enter both event name and category");
+  const addCategory = () => {
+    if (!newCategoryName.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    const newCategory: EventCategory = {
+      id: crypto.randomUUID(),
+      name: newCategoryName,
+    };
+
+    setCategories([...categories, newCategory]);
+    setNewCategoryName("");
+    toast.success("Category added successfully");
+  };
+
+  const removeCategory = (categoryId: string) => {
+    setCategories(categories.filter((cat) => cat.id !== categoryId));
+    setEventTypes(eventTypes.filter((type) => type.categoryId !== categoryId));
+    toast.success("Category and its event types removed successfully");
+  };
+
+  const addEventType = (categoryId: string) => {
+    if (!newEventName.trim()) {
+      toast.error("Please enter an event name");
       return;
     }
 
     const newType: EventType = {
       id: crypto.randomUUID(),
       name: newEventName,
-      category: newEventCategory,
+      categoryId: categoryId,
     };
 
     setEventTypes([...eventTypes, newType]);
     setNewEventName("");
-    setNewEventCategory("bathroom");
     toast.success("Event type added successfully");
   };
 
@@ -45,44 +66,70 @@ const AdminSettings = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
-          <Input
-            placeholder="New event type name"
-            value={newEventName}
-            onChange={(e) => setNewEventName(e.target.value)}
-          />
-          <Select onValueChange={(value: "bathroom" | "other") => setNewEventCategory(value)} value={newEventCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bathroom">Bathroom</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={addEventType} className="w-full">Add Event Type</Button>
+          <div className="flex gap-2">
+            <Input
+              placeholder="New category name"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+            />
+            <Button onClick={addCategory}>Add Category</Button>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <h3 className="font-semibold">Current Event Types</h3>
-          {eventTypes.map((type) => (
-            <div
-              key={type.id}
-              className="p-3 bg-accent rounded-md flex justify-between items-center"
-            >
-              <div>
-                <span className="font-medium">{type.name}</span>
-                <span className="ml-2 text-sm text-gray-600">({type.category})</span>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => removeEventType(type.id)}
-              >
-                Remove
-              </Button>
-            </div>
+        <Accordion type="single" collapsible className="w-full">
+          {categories.map((category) => (
+            <AccordionItem key={category.id} value={category.id}>
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex justify-between items-center w-full pr-4">
+                  <span>{category.name}</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeCategory(category.id);
+                    }}
+                  >
+                    Remove Category
+                  </Button>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4 pt-4">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="New event type name"
+                      value={newEventName}
+                      onChange={(e) => setNewEventName(e.target.value)}
+                    />
+                    <Button onClick={() => addEventType(category.id)}>
+                      Add Event Type
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {eventTypes
+                      .filter((type) => type.categoryId === category.id)
+                      .map((type) => (
+                        <div
+                          key={type.id}
+                          className="p-3 bg-accent rounded-md flex justify-between items-center"
+                        >
+                          <span className="font-medium">{type.name}</span>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeEventType(type.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </CardContent>
     </Card>
   );
