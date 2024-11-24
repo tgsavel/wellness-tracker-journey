@@ -4,7 +4,7 @@ import { WeeklySummary as WeeklySummaryType } from "@/types/health";
 import { useContext, useState } from "react";
 import { EventContext } from "@/context/EventContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
+import { format, startOfWeek, endOfWeek, addWeeks, parseISO } from "date-fns";
 
 const WeeklySummary = () => {
   const { events, eventTypes, categories } = useContext(EventContext);
@@ -13,16 +13,15 @@ const WeeklySummary = () => {
   // Calculate dates for the selected week
   const getWeekDates = (offset: number) => {
     const today = new Date();
-    const start = startOfWeek(addWeeks(today, offset));
-    const end = endOfWeek(addWeeks(today, offset));
+    const start = startOfWeek(addWeeks(today, offset), { weekStartsOn: 0 });
+    const end = endOfWeek(addWeeks(today, offset), { weekStartsOn: 0 });
     return { startOfWeek: start, endOfWeek: end };
   };
 
   const { startOfWeek: weekStart, endOfWeek: weekEnd } = getWeekDates(weekOffset);
 
   const weeklyEvents = events.filter(event => {
-    const eventDate = new Date(event.date);
-    // Include events that fall on or between start and end dates
+    const eventDate = parseISO(event.date);
     return eventDate >= weekStart && eventDate <= weekEnd;
   });
 
