@@ -4,7 +4,7 @@ import { WeeklySummary as WeeklySummaryType } from "@/types/health";
 import { useContext, useState } from "react";
 import { EventContext } from "@/context/EventContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, addWeeks } from "date-fns";
 
 const WeeklySummary = () => {
   const { events, eventTypes, categories } = useContext(EventContext);
@@ -13,20 +13,17 @@ const WeeklySummary = () => {
   // Calculate dates for the selected week
   const getWeekDates = (offset: number) => {
     const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + (offset * 7));
-    
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    return { startOfWeek, endOfWeek };
+    const start = startOfWeek(addWeeks(today, offset));
+    const end = endOfWeek(addWeeks(today, offset));
+    return { startOfWeek: start, endOfWeek: end };
   };
 
-  const { startOfWeek, endOfWeek } = getWeekDates(weekOffset);
+  const { startOfWeek: weekStart, endOfWeek: weekEnd } = getWeekDates(weekOffset);
 
   const weeklyEvents = events.filter(event => {
     const eventDate = new Date(event.date);
-    return eventDate >= startOfWeek && eventDate <= endOfWeek;
+    // Include events that fall on or between start and end dates
+    return eventDate >= weekStart && eventDate <= weekEnd;
   });
 
   const getCategoryNameForEventType = (eventTypeName: string) => {
@@ -60,8 +57,8 @@ const WeeklySummary = () => {
   };
 
   const summary: WeeklySummaryType = {
-    startDate: startOfWeek.toISOString().split('T')[0],
-    endDate: endOfWeek.toISOString().split('T')[0],
+    startDate: format(weekStart, 'yyyy-MM-dd'),
+    endDate: format(weekEnd, 'yyyy-MM-dd'),
     totalEvents: weeklyEvents.length,
     eventsByType: weeklyEvents.reduce((acc, event) => {
       acc[event.type] = (acc[event.type] || 0) + 1;
@@ -95,7 +92,7 @@ const WeeklySummary = () => {
       <CardContent>
         <div className="space-y-4">
           <p className="text-center text-gray-600">
-            {format(startOfWeek, "MMMM d, yyyy")} to {format(endOfWeek, "MMMM d, yyyy")}
+            {format(weekStart, "MMMM d, yyyy")} to {format(weekEnd, "MMMM d, yyyy")}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-accent rounded-lg">
