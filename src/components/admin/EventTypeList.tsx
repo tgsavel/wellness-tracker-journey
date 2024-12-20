@@ -31,7 +31,10 @@ export const EventTypeList = ({ eventTypes, onRemoveEventType }: EventTypeListPr
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => setEventToDelete(type.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEventToDelete(type.id);
+            }}
           >
             Remove
           </Button>

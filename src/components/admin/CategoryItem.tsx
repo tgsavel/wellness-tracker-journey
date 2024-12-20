@@ -38,6 +38,12 @@ export const CategoryItem = ({
     setNewEventName("");
   };
 
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
   return (
     <AccordionItem key={category.id} value={category.id}>
       <AccordionTrigger className="hover:no-underline">
@@ -46,10 +52,7 @@ export const CategoryItem = ({
           <Button
             variant="destructive"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDeleteDialogOpen(true);
-            }}
+            onClick={handleRemoveClick}
           >
             Remove Category
           </Button>
