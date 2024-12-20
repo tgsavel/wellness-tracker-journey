@@ -4,22 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { EventContext } from "@/context/EventContext";
-import { EventType, EventCategory } from "@/types/health";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion } from "@/components/ui/accordion";
 import { Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CategoryItem } from "./admin/CategoryItem";
 
 const AdminSettings = () => {
   const { eventTypes, setEventTypes, categories, setCategories } = useContext(EventContext);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newEventName, setNewEventName] = useState("");
 
   const handleSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Update categories
       const { error: categoriesError } = await supabase
         .from('categories')
         .upsert(
@@ -32,7 +30,6 @@ const AdminSettings = () => {
       
       if (categoriesError) throw categoriesError;
 
-      // Update event types
       const { error: eventTypesError } = await supabase
         .from('event_types')
         .upsert(
@@ -73,7 +70,7 @@ const AdminSettings = () => {
 
       if (error) throw error;
 
-      setCategories([...categories, data as EventCategory]);
+      setCategories([...categories, data]);
       setNewCategoryName("");
       toast.success("Category added successfully");
     } catch (error: any) {
@@ -98,8 +95,8 @@ const AdminSettings = () => {
     }
   };
 
-  const addEventType = async (categoryId: string) => {
-    if (!newEventName.trim()) {
+  const addEventType = async (categoryId: string, name: string) => {
+    if (!name.trim()) {
       toast.error("Please enter an event name");
       return;
     }
@@ -111,7 +108,7 @@ const AdminSettings = () => {
       const { data, error } = await supabase
         .from('event_types')
         .insert({
-          name: newEventName,
+          name: name,
           categoryid: categoryId,
           user_id: user.id
         })
@@ -120,8 +117,7 @@ const AdminSettings = () => {
 
       if (error) throw error;
 
-      setEventTypes([...eventTypes, data as EventType]);
-      setNewEventName("");
+      setEventTypes([...eventTypes, data]);
       toast.success("Event type added successfully");
     } catch (error: any) {
       toast.error("Error adding event type: " + error.message);
@@ -169,56 +165,14 @@ const AdminSettings = () => {
 
         <Accordion type="single" collapsible className="w-full">
           {categories.map((category) => (
-            <AccordionItem key={category.id} value={category.id}>
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex justify-between items-center w-full pr-4">
-                  <span>{category.name}</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeCategory(category.id);
-                    }}
-                  >
-                    Remove Category
-                  </Button>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4 pt-4">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="New event type name"
-                      value={newEventName}
-                      onChange={(e) => setNewEventName(e.target.value)}
-                    />
-                    <Button onClick={() => addEventType(category.id)}>
-                      Add Event Type
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {eventTypes
-                      .filter((type) => type.categoryid === category.id)
-                      .map((type) => (
-                        <div
-                          key={type.id}
-                          className="p-3 bg-accent rounded-md flex justify-between items-center"
-                        >
-                          <span className="font-medium">{type.name}</span>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeEventType(type.id)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+            <CategoryItem
+              key={category.id}
+              category={category}
+              eventTypes={eventTypes}
+              onRemoveCategory={removeCategory}
+              onAddEventType={addEventType}
+              onRemoveEventType={removeEventType}
+            />
           ))}
         </Accordion>
       </CardContent>
