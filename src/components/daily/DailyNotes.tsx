@@ -28,9 +28,9 @@ export const DailyNotes = ({ date }: DailyNotesProps) => {
         .select('notes')
         .eq('date', format(new Date(date), 'yyyy-MM-dd'))
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is the error code for no rows returned
+      if (error) {
         throw error;
       }
 
