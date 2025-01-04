@@ -8,6 +8,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Event } from "@/types/health";
 import { EventForm } from "./events/EventForm";
 import { EventList } from "./events/EventList";
+import { CategorySummary } from "./daily/CategorySummary";
+import { DailyNotes } from "./daily/DailyNotes";
 import { supabase } from "@/integrations/supabase/client";
 
 const categoryColors: { [key: string]: string } = {
@@ -42,7 +44,6 @@ const DailyTracker = () => {
       if (!user) throw new Error("Not authenticated");
 
       if (editingEvent) {
-        // Update existing event
         const { error } = await supabase
           .from('events')
           .update({
@@ -63,7 +64,6 @@ const DailyTracker = () => {
         setEditingEvent(null);
         toast.success("Event updated successfully");
       } else {
-        // Add new event
         const { data, error } = await supabase
           .from('events')
           .insert({
@@ -110,22 +110,6 @@ const DailyTracker = () => {
 
   const formattedDate = format(currentDate, "EEEE, MMMM d, yyyy");
   const todaysEvents = events.filter(event => event.date === format(currentDate, 'yyyy-MM-dd'));
-
-  const getTodaysCategorySummary = () => {
-    const categorySummary: Record<string, number> = {};
-    
-    todaysEvents.forEach(event => {
-      const eventType = eventTypes.find(type => type.name === event.type);
-      if (eventType) {
-        const category = categories.find(cat => cat.id === eventType.categoryid);
-        if (category) {
-          categorySummary[category.name] = (categorySummary[category.name] || 0) + 1;
-        }
-      }
-    });
-    
-    return categorySummary;
-  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
@@ -175,20 +159,14 @@ const DailyTracker = () => {
           />
         )}
 
-        <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
-          <h4 className="font-medium mb-2">Category Summary:</h4>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(getTodaysCategorySummary()).map(([category, count]) => (
-              <div 
-                key={category} 
-                className={`flex justify-between items-center px-3 py-1 rounded ${categoryColors[category] || 'bg-gray-100'}`}
-              >
-                <span>{category}:</span>
-                <span className="font-semibold">{count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CategorySummary
+          events={todaysEvents}
+          eventTypes={eventTypes}
+          categories={categories}
+          categoryColors={categoryColors}
+        />
+
+        <DailyNotes date={formattedDate} />
 
         <EventList
           events={todaysEvents}
