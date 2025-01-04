@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Event, EventType, EventCategory } from "@/types/health";
+import { format, parse } from "date-fns";
 
 interface EventFormProps {
   event?: Event;
@@ -22,6 +23,7 @@ export const EventForm = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [time, setTime] = useState(format(new Date(), "HH:mm"));
 
   useEffect(() => {
     if (event) {
@@ -31,6 +33,7 @@ export const EventForm = ({
         setSelectedType(event.type);
       }
       setNotes(event.notes || "");
+      setTime(format(new Date(event.timestamp), "HH:mm"));
     }
   }, [event, eventTypes]);
 
@@ -39,10 +42,16 @@ export const EventForm = ({
       return;
     }
 
+    // Create a new Date object with the current date but selected time
+    const [hours, minutes] = time.split(':').map(Number);
+    const timestamp = new Date();
+    timestamp.setHours(hours, minutes, 0, 0);
+
     onSave({
       ...event,
       type: selectedType,
       notes,
+      timestamp: timestamp.toISOString(),
     });
   };
 
@@ -77,6 +86,12 @@ export const EventForm = ({
           </SelectContent>
         </Select>
       )}
+
+      <Input
+        type="time"
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+      />
 
       <Input
         placeholder="Add notes (optional)"

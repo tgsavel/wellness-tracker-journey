@@ -50,7 +50,7 @@ const DailyTracker = () => {
             type: eventData.type,
             notes: eventData.notes,
             date: format(currentDate, 'yyyy-MM-dd'),
-            timestamp: new Date().toISOString(),
+            timestamp: eventData.timestamp,
           })
           .eq('id', editingEvent.id);
 
@@ -70,7 +70,7 @@ const DailyTracker = () => {
             date: format(currentDate, 'yyyy-MM-dd'),
             type: eventData.type!,
             notes: eventData.notes,
-            timestamp: new Date().toISOString(),
+            timestamp: eventData.timestamp,
             user_id: user.id
           })
           .select()
@@ -109,7 +109,9 @@ const DailyTracker = () => {
   };
 
   const formattedDate = format(currentDate, "EEEE, MMMM d, yyyy");
-  const todaysEvents = events.filter(event => event.date === format(currentDate, 'yyyy-MM-dd'));
+  const todaysEvents = events
+    .filter(event => event.date === format(currentDate, 'yyyy-MM-dd'))
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   return (
     <Card className="w-full max-w-2xl mx-auto animate-fade-in">
