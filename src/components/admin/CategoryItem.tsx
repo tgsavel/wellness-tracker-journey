@@ -4,6 +4,7 @@ import { EventCategory, EventType } from "@/types/health";
 import { Input } from "@/components/ui/input";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { EventTypeList } from "./EventTypeList";
+import { Pencil } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,8 @@ interface CategoryItemProps {
   onRemoveCategory: (categoryId: string) => void;
   onAddEventType: (categoryId: string, name: string) => void;
   onRemoveEventType: (eventTypeId: string) => void;
+  onUpdateCategory: (categoryId: string, newName: string) => void;
+  onUpdateEventType: (eventTypeId: string, newName: string) => void;
 }
 
 export const CategoryItem = ({
@@ -29,9 +32,13 @@ export const CategoryItem = ({
   onRemoveCategory,
   onAddEventType,
   onRemoveEventType,
+  onUpdateCategory,
+  onUpdateEventType,
 }: CategoryItemProps) => {
   const [newEventName, setNewEventName] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(category.name);
 
   const handleAddEventType = () => {
     onAddEventType(category.id, newEventName);
@@ -44,11 +51,48 @@ export const CategoryItem = ({
     setIsDeleteDialogOpen(true);
   };
 
+  const handleEditSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (editedName.trim() !== category.name) {
+      onUpdateCategory(category.id, editedName.trim());
+    }
+    setIsEditing(false);
+  };
+
   return (
     <AccordionItem key={category.id} value={category.id}>
       <AccordionTrigger className="hover:no-underline">
         <div className="flex justify-between items-center w-full pr-4">
-          <span>{category.name}</span>
+          {isEditing ? (
+            <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+              <Input
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className="w-48"
+              />
+              <Button size="sm" onClick={handleEditSave}>Save</Button>
+              <Button size="sm" variant="outline" onClick={() => {
+                setIsEditing(false);
+                setEditedName(category.name);
+              }}>Cancel</Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 items-center">
+              <span>{category.name}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <Button
             variant="destructive"
             size="sm"
@@ -71,6 +115,7 @@ export const CategoryItem = ({
           <EventTypeList
             eventTypes={eventTypes.filter((type) => type.categoryid === category.id)}
             onRemoveEventType={onRemoveEventType}
+            onUpdateEventType={onUpdateEventType}
           />
         </div>
       </AccordionContent>

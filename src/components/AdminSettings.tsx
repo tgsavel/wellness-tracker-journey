@@ -78,6 +78,45 @@ const AdminSettings = () => {
     }
   };
 
+  const updateCategory = async (categoryId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ name: newName })
+        .eq('id', categoryId);
+
+      if (error) throw error;
+
+      setCategories(categories.map(cat =>
+        cat.id === categoryId ? { ...cat, name: newName } : cat
+      ));
+      toast.success("Category updated successfully");
+    } catch (error: any) {
+      toast.error("Error updating category: " + error.message);
+    }
+  };
+
+  const updateEventType = async (eventTypeId: string, newName: string) => {
+    try {
+      const eventType = eventTypes.find(type => type.id === eventTypeId);
+      if (!eventType) throw new Error("Event type not found");
+
+      const { error } = await supabase
+        .from('event_types')
+        .update({ name: newName })
+        .eq('id', eventTypeId);
+
+      if (error) throw error;
+
+      setEventTypes(eventTypes.map(type =>
+        type.id === eventTypeId ? { ...type, name: newName } : type
+      ));
+      toast.success("Event type updated successfully");
+    } catch (error: any) {
+      toast.error("Error updating event type: " + error.message);
+    }
+  };
+
   const removeCategory = async (categoryId: string) => {
     try {
       const { error } = await supabase
@@ -172,6 +211,8 @@ const AdminSettings = () => {
               onRemoveCategory={removeCategory}
               onAddEventType={addEventType}
               onRemoveEventType={removeEventType}
+              onUpdateCategory={updateCategory}
+              onUpdateEventType={updateEventType}
             />
           ))}
         </Accordion>
