@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -53,63 +54,66 @@ export const DayEventsDialog = ({
 
   return (
     <Dialog open={selectedDate !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-2xl">
             Events for {selectedDate ? format(selectedDate, "MMMM d, yyyy") : ""}
           </DialogTitle>
         </DialogHeader>
+
         {selectedDate && (
-          <div className="space-y-4">
-            <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
-              <h4 className="font-medium mb-2">Category Summary:</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(getDaySummary(selectedDate)).map(([category, count]) => (
-                  <div 
-                    key={category} 
-                    className={`flex justify-between items-center px-3 py-1 rounded ${categoryColors[category] || 'bg-gray-100'}`}
+          <ScrollArea className="h-[calc(90vh-8rem)] px-6">
+            <div className="space-y-4 pb-6">
+              <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
+                <h4 className="font-medium mb-2">Category Summary:</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(getDaySummary(selectedDate)).map(([category, count]) => (
+                    <div 
+                      key={category} 
+                      className={`flex justify-between items-center px-3 py-1 rounded ${categoryColors[category] || 'bg-gray-100'}`}
+                    >
+                      <span>{category}:</span>
+                      <span className="font-semibold">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {getDayEvents(selectedDate).map((event) => {
+                const categoryName = getCategoryNameForEventType(event.type);
+                return (
+                  <div
+                    key={event.id}
+                    className={`p-3 rounded-md flex justify-between items-center ${categoryColors[categoryName] || 'bg-gray-100'}`}
                   >
-                    <span>{category}:</span>
-                    <span className="font-semibold">{count}</span>
+                    <div>
+                      <p className="font-medium">
+                        {categoryName}: {event.type}
+                      </p>
+                      {event.notes && (
+                        <p className="text-sm text-gray-600">{event.notes}</p>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {new Date(event.timestamp).toLocaleTimeString()}
+                    </span>
                   </div>
-                ))}
+                );
+              })}
+
+              {getDayEvents(selectedDate).length === 0 && (
+                <p className="text-center text-gray-500">No events for this day</p>
+              )}
+
+              <div className="flex justify-end">
+                <Button 
+                  onClick={() => navigate(`/day/${format(selectedDate, 'yyyy-MM-dd')}`)}
+                >
+                  View Full Day
+                </Button>
               </div>
             </div>
-
-            {getDayEvents(selectedDate).map((event) => {
-              const categoryName = getCategoryNameForEventType(event.type);
-              return (
-                <div
-                  key={event.id}
-                  className={`p-3 rounded-md flex justify-between items-center ${categoryColors[categoryName] || 'bg-gray-100'}`}
-                >
-                  <div>
-                    <p className="font-medium">
-                      {categoryName}: {event.type}
-                    </p>
-                    {event.notes && (
-                      <p className="text-sm text-gray-600">{event.notes}</p>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {new Date(event.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-              );
-            })}
-
-            {getDayEvents(selectedDate).length === 0 && (
-              <p className="text-center text-gray-500">No events for this day</p>
-            )}
-
-            <div className="flex justify-end">
-              <Button 
-                onClick={() => navigate(`/day/${format(selectedDate, 'yyyy-MM-dd')}`)}
-              >
-                View Full Day
-              </Button>
-            </div>
-          </div>
+          </ScrollArea>
         )}
       </DialogContent>
     </Dialog>
