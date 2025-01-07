@@ -49,8 +49,9 @@ const MonthlyCalendar = () => {
           <TooltipProvider>
             <Calendar
               mode="single"
-              selected={currentMonth}
+              selected={selectedDate}
               month={currentMonth}
+              onMonthChange={setCurrentMonth}
               onDayClick={handleDayClick}
               modifiers={{
                 hasEvents: (date) => getDayEvents(date).length > 0,
